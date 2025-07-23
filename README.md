@@ -16,3 +16,7 @@ All quiz questions and answers are stored in a JavaScript array, making it simpl
 
 The application works well on both desktop and mobile screens. It’s a great practice project for building interactive UI features and understanding the flow of a quiz system from start to finish.
 
+OUTPUT: 
+
+<img width="1266" height="883" alt="Image" src="https://github.com/user-attachments/assets/405363bf-5a8e-4a30-a597-d2f6993b8c65" />
+

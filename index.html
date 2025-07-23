@@ -1,0 +1,308 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Interactive Quiz Application!</title>
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;600&display=swap" rel="stylesheet">
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+      font-family: 'Poppins', sans-serif;
+    }
+
+    body {
+      background: var(--bg);
+      color: var(--text);
+      transition: background 0.3s, color 0.3s;
+      min-height: 100vh;
+      padding: 20px;
+    }
+
+    :root {
+      --bg: #fdf6f0;
+      --text: #2d3436;
+      --btn-bg: #ffeaa7;
+      --btn-text: #2d3436;
+      --btn-hover: #fab1a0;
+      --btn-border: #e17055;
+      --correct: #55efc4;
+      --wrong: #ff7675;
+    }
+
+    body.dark {
+      --bg: #1e1e2f;
+      --text: #f0f0f0;
+      --btn-bg: #2c2c40;
+      --btn-text: #ffffff;
+      --btn-hover: #636e72;
+      --btn-border: #81ecec;
+      --correct: #00b894;
+      --wrong: #d63031;
+    }
+
+    .dark-mode-toggle {
+      position: absolute;
+      top: 20px;
+      right: 20px;
+      background: var(--btn-bg);
+      color: var(--btn-text);
+      border: 2px solid var(--btn-border);
+      padding: 10px 15px;
+      border-radius: 12px;
+      font-weight: bold;
+      cursor: pointer;
+    }
+
+    .timer {
+      position: absolute;
+      top: 20px;
+      left: 20px;
+      font-size: 18px;
+      font-weight: bold;
+      color: #d63031;
+    }
+
+    .app {
+      max-width: 750px;
+      margin: 80px auto;
+      padding: 30px;
+      border-radius: 20px;
+      background: var(--bg);
+      box-shadow: 0 0 20px rgba(0,0,0,0.1);
+    }
+
+    h1 {
+      text-align: center;
+      margin-bottom: 20px;
+      font-size: 34px;
+    }
+
+    .question-header {
+      display: flex;
+      justify-content: space-between;
+      margin-bottom: 15px;
+      font-weight: bold;
+    }
+
+    .question {
+      font-size: 22px;
+      margin-bottom: 20px;
+    }
+
+    .options {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+
+    .option {
+      background: var(--btn-bg);
+      color: var(--btn-text);
+      padding: 14px;
+      border-radius: 10px;
+      font-size: 17px;
+      border: 2px solid transparent;
+      cursor: pointer;
+      transition: all 0.3s ease;
+    }
+
+    .option:hover {
+      background: var(--btn-hover);
+      border-color: var(--btn-border);
+    }
+
+    .option.correct {
+      background: var(--correct) !important;
+      color: #000;
+    }
+
+    .option.wrong {
+      background: var(--wrong) !important;
+      color: #fff;
+    }
+
+    .popup {
+      position: fixed;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      background: var(--bg);
+      color: var(--text);
+      padding: 40px;
+      border-radius: 16px;
+      box-shadow: 0 0 30px rgba(0,0,0,0.4);
+      text-align: center;
+      display: none;
+      z-index: 999;
+    }
+
+    .popup.active {
+      display: block;
+    }
+
+    .play-again {
+      margin-top: 20px;
+      padding: 12px 25px;
+      background: #6c5ce7;
+      color: white;
+      border: none;
+      border-radius: 12px;
+      font-size: 16px;
+      cursor: pointer;
+      transition: background 0.3s ease;
+    }
+
+    .play-again:hover {
+      background: #a29bfe;
+    }
+
+    .progress-container {
+      width: 100%;
+      background: #dfe6e9;
+      border-radius: 10px;
+      overflow: hidden;
+      margin-bottom: 20px;
+      height: 14px;
+    }
+
+    .progress-bar {
+      height: 100%;
+      background: #74b9ff;
+      width: 0%;
+      transition: width 0.5s ease;
+    }
+  </style>
+</head>
+<body>
+  <button class="dark-mode-toggle" onclick="toggleDarkMode()">Toggle Mode</button>
+  <div class="timer">⏱ Time: <span id="time">20</span>s</div>
+
+  <div class="app">
+    <h1>Interactive Quiz Application</h1>
+    <div class="progress-container"><div class="progress-bar" id="progress-bar"></div></div>
+    <div class="question-header">
+      <div id="question-number">Question 1</div>
+      <div id="total-questions"></div>
+    </div>
+    <div class="question" id="question"></div>
+    <div class="options" id="options"></div>
+  </div>
+
+  <div class="popup" id="popup">
+    <div id="popup-message"></div>
+    <button class="play-again" onclick="startQuiz()">🔄 Play Again</button>
+  </div>
+
+  <script>
+    const questions = [
+      { q: "Which language runs in a web browser?", options: ["Java", "C", "Python", "JavaScript"], answer: "JavaScript" },
+      { q: "What does CSS stand for?", options: ["Computer Style Sheets", "Cascading Style Sheets", "Colorful Style Sheets", "Creative Style Sheets"], answer: "Cascading Style Sheets" },
+      { q: "What does HTML stand for?", options: ["HyperText Markup Language", "Home Tool Markup Language", "Hyperlinks and Text Markup Language", "High Text Mark Language"], answer: "HyperText Markup Language" },
+      { q: "Which year was JavaScript launched?", options: ["1996", "1995", "1994", "None of the above"], answer: "1995" },
+      { q: "Which one is a JavaScript framework?", options: ["React", "Laravel", "Django", "Sass"], answer: "React" }
+    ];
+
+    let currentIndex = 0;
+    let correctAnswers = 0;
+    let timer, timeLeft = 20;
+    let totalTime = 0;
+
+    const questionEl = document.getElementById('question');
+    const optionsEl = document.getElementById('options');
+    const popup = document.getElementById('popup');
+    const popupMessage = document.getElementById('popup-message');
+    const timeDisplay = document.getElementById('time');
+    const progressBar = document.getElementById('progress-bar');
+    const questionNumberEl = document.getElementById('question-number');
+    const totalQuestionsEl = document.getElementById('total-questions');
+
+    function startQuiz() {
+      popup.classList.remove('active');
+      currentIndex = 0;
+      correctAnswers = 0;
+      totalTime = 0;
+      totalQuestionsEl.textContent = `of ${questions.length}`;
+      loadQuestion();
+    }
+
+    function loadQuestion() {
+      clearInterval(timer);
+      timeLeft = 20;
+      updateTimer();
+      timer = setInterval(() => {
+        timeLeft--;
+        updateTimer();
+        totalTime++;
+        if (timeLeft <= 0) {
+          clearInterval(timer);
+          showAnswer(null);
+        }
+      }, 1000);
+
+      const current = questions[currentIndex];
+      questionEl.textContent = current.q;
+      questionNumberEl.textContent = `Question ${currentIndex + 1}`;
+      optionsEl.innerHTML = '';
+      progressBar.style.width = `${(currentIndex / questions.length) * 100}%`;
+
+      current.options.forEach(opt => {
+        const btn = document.createElement('button');
+        btn.textContent = opt;
+        btn.className = 'option';
+        btn.onclick = () => {
+          clearInterval(timer);
+          showAnswer(opt, btn);
+        };
+        optionsEl.appendChild(btn);
+      });
+    }
+
+    function showAnswer(selected, btn) {
+      const correct = questions[currentIndex].answer;
+      const buttons = document.querySelectorAll('.option');
+      buttons.forEach(b => {
+        b.disabled = true;
+        if (b.textContent === correct) {
+          b.classList.add('correct');
+        } else if (b.textContent === selected && selected !== correct) {
+          b.classList.add('wrong');
+        }
+      });
+
+      if (selected === correct) correctAnswers++;
+      currentIndex++;
+
+      setTimeout(() => {
+        if (currentIndex < questions.length) {
+          loadQuestion();
+        } else {
+          progressBar.style.width = `100%`;
+          showPopup(`🎯 Quiz Completed!<br><br>
+            ✅ Correct: ${correctAnswers}<br>
+            ❌ Wrong: ${questions.length - correctAnswers}<br>
+            🕒 Time Taken: ${totalTime}s<br>
+            📊 Total Questions: ${questions.length}`);
+        }
+      }, 1500);
+    }
+
+    function showPopup(message) {
+      popupMessage.innerHTML = message;
+      popup.classList.add('active');
+    }
+
+    function toggleDarkMode() {
+      document.body.classList.toggle('dark');
+    }
+
+    function updateTimer() {
+      timeDisplay.textContent = timeLeft;
+    }
+
+    window.onload = startQuiz;
+  </script>
+</body>
+</html>
